@@ -1,0 +1,134 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
+
+public class DigitalClock extends JFrame {
+    private JLabel timeLabel;
+    private JLabel dateLabel;
+    private JLabel dayLabel;
+    private JLabel stopwatchLabel;
+    private JLabel countdownLabel;
+    private JTextField countdownField;
+    private Timer timer;
+    private long startTime;
+    private Timer countdownTimer;
+    private long countdownTime;
+
+    public DigitalClock() {
+        setLayout(new GridLayout(7, 1));
+        timeLabel = new JLabel();
+        dateLabel = new JLabel();
+        dayLabel = new JLabel();
+        stopwatchLabel = new JLabel("Stopwatch: 00:00:00");
+        countdownLabel = new JLabel("Countdown: 00:00:00");
+        countdownField = new JTextField("Enter seconds");
+
+        add(timeLabel);
+        add(dateLabel);
+        add(dayLabel);
+        add(stopwatchLabel);
+        add(countdownLabel);
+        add(countdownField);
+
+        // Timer to update the time, date, and day
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm:ss a");
+                SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, d MMM yyyy");
+                SimpleDateFormat dayFormat = new SimpleDateFormat("EEEE");
+                Date now = new Date();
+
+                timeLabel.setText("Time: " + timeFormat.format(now));
+                dateLabel.setText("Date: " + dateFormat.format(now));
+                dayLabel.setText("Day: " + dayFormat.format(now));
+            }
+        };
+        timer = new Timer();
+        timer.schedule(task, 0, 1000);
+
+        // Stopwatch buttons
+        JButton startStopwatchButton = new JButton("Start Stopwatch");
+        JButton stopStopwatchButton = new JButton("Stop Stopwatch");
+        JButton resetStopwatchButton = new JButton("Reset Stopwatch");
+
+        add(startStopwatchButton);
+        add(stopStopwatchButton);
+        add(resetStopwatchButton);
+
+        startStopwatchButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                startTime = System.currentTimeMillis();
+                TimerTask stopwatchTask = new TimerTask() {
+                    @Override
+                    public void run() {
+                        long elapsed = System.currentTimeMillis() - startTime;
+                        stopwatchLabel.setText("Stopwatch: " + formatTime(elapsed));
+                    }
+                };
+                timer.schedule(stopwatchTask, 0, 1000);
+            }
+        });
+
+        stopStopwatchButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                timer.cancel();
+            }
+        });
+
+        resetStopwatchButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                stopwatchLabel.setText("Stopwatch: 00:00:00");
+            }
+        });
+
+        // Countdown timer button
+        JButton startCountdownButton = new JButton("Start Countdown");
+        add(startCountdownButton);
+
+        startCountdownButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                countdownTime = Long.parseLong(countdownField.getText()) * 1000;
+                countdownTimer = new Timer();
+                TimerTask countdownTask = new TimerTask() {
+                    @Override
+                    public void run() {
+                        if (countdownTime > 0) {
+                            countdownTime -= 1000;
+                            countdownLabel.setText("Countdown: " + formatTime(countdownTime));
+                        } else {
+                            countdownTimer.cancel();
+                            JOptionPane.showMessageDialog(null, "Countdown finished!");
+                        }
+                    }
+                };
+                countdownTimer.schedule(countdownTask, 0, 1000);
+            }
+        });
+
+        setTitle("Digital Clock");
+        setSize(300, 300);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setVisible(true);
+    }
+
+    private String formatTime(long millis) {
+        long second = (millis / 1000) % 60;
+        long minute = (millis / (1000 * 60)) % 60;
+        long hour = (millis / (1000 * 60 * 60)) % 24;
+        return String.format("%02d:%02d:%02d", hour, minute, second);
+    }
+
+    public static void main(String[] args) {
+        new DigitalClock();
+    }
+}
